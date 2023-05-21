@@ -22,7 +22,7 @@ If a user chooses to further decorate the NUPhone example depicted above as [r{�
 
 NUPhone is very opinionated about eliminating redundancy in expressions. We strongly discourage this type of expression for [rɛd] or [rid]:
 
-* {rɛd|rid}
+\* {rɛd|rid}
 
 While the above representation might be easier to generate from lookup tables, comparison logic would be more expensive. The parts that are similar among the variant phonetic representations are expected to be outside of the squiggly braces.
 
