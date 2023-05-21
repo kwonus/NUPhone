@@ -22,7 +22,7 @@ If a user chooses to further decorate the NUPhone example depicted above as [r{�
 
 NUPhone is very opinionated about eliminating redundancy in expressions. We strongly discourage this type of expression for [rɛd] or [rid]:
 
-{rɛd|rid}
+* {rɛd|rid}
 
 While the above representation might be easier to generate from lookup tables, comparison logic would be more expensive. The parts that are similar among the variant phonetic representations are expected to be outside of the squiggly braces.
 
@@ -44,7 +44,7 @@ Fast-forward to now: I am resurrecting the H&T algorithm to be applied to the do
 1) [The 44 Phonemes in English (dyslexia-reading-well.com)](https://www.dyslexia-reading-well.com/44-phonemes-in-english.html)
 2) [ipa-dict/en_US.txt at master · open-dict-data/ipa-dict · GitHub](https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt)
 
-Sources found herein will utilize these two tables for NUPhone-generation from English strings. From here, it gets interesting for the trained linguist. Obviously, each NUPhone character (i.e. subset of IPA) can be expressed as a feature-vector. Moreover, these feature vectors can be utilized to mathematically calculate sound similarity. We will tweak the H&T algorithm to account for phonemic similarity: replace discrete Boolean character-by-character comparisons with phoneme-by-phoneme similarity metrics. This is not entirely unlike this open-source effort by Microsoft Research:
+Sources found herein will utilize these two tables for NUPhone-generation from English strings. From here, it gets interesting for the trained linguist. Obviously, each NUPhone character (i.e. subset of IPA) can be expressed as a feature-vector. Moreover, these feature vectors can be utilized to mathematically calculate sound similarity. I will tweak the H&T algorithm to account for phonemic similarity: replace discrete Boolean character-by-character comparisons with phoneme-by-phoneme similarity metrics. This is not entirely unlike this open-source effort by Microsoft Research:
 
 https://github.com/Microsoft/PhoneticMatching
 
