@@ -36,7 +36,7 @@ R/O is looking for the longest common substring (LCS). H&T simplifies this, by o
 
 While this is my first public announcement of the H&T algorithm, I originally conceived of it in 2016, while in pursuit of a Masters in Computational Linguistics from the University of Washington. During my coursework, I was performing word alignment between bitexts using H&T. Specifically, I was aligning the words of an early French translation of the bible with the words of an early modern English version of the bible in conjunction with machine translation. To be completely honest, I do not recall the full details. However, I always ascribed merit to the H&T processing concept.
 
-Fast-forward to now: I am resurrecting H&T for the application domain fuzzy string comparisons. I am tweaking the H&T algorithm to compare phonetic features represented in NUPhone. With just two freely available English-to-IPA tabular resources, H&T is able to construct English-to-NUPhone generators:
+Fast-forward to now: I am resurrecting H&T for the application domain of fuzzy string comparisons. I am tweaking the H&T algorithm to compare phonetic features represented in NUPhone. With just two freely available English-to-IPA tabular resources, H&T is able to construct English-to-NUPhone generators:
 
 1) [The 44 Phonemes in English (dyslexia-reading-well.com)](https://www.dyslexia-reading-well.com/44-phonemes-in-english.html)
 2) [ipa-dict/en_US.txt at master · open-dict-data/ipa-dict · GitHub](https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt)
