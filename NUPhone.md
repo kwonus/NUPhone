@@ -37,7 +37,7 @@ On 23 May 2023, I had this short conversation with Bing:
 
 I was rightly impressed with her response. Given her insight, let's also consider the value proposition of using phonemes for sounds-alike searching. We will not only look for ways ways to speed up similarity processing, but we will consciencely seek a design that provides a broader spectrum of results with high fidelity.
 
-This academic paper provides a great summary of how phoneme embeddings and similarity measurements can be rolled-up into whole-token comparisons:
+This academic paper describes how phoneme embeddings and similarity measurements can be rolled-up into whole-token comparisons:
 
 https://arxiv.org/pdf/2109.14796.pdf   [<u>Phonetic Word Embeddings</u>, Rahul Sharma et al]
 
