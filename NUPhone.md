@@ -4,9 +4,9 @@
 
 ### Introducing NUPhone
 
-The International Phonetic Alphabet (IPA) is a highly embraced standard representation for sounds. Professional linguists often use it to provide clear phonetic representation for any language. However, when used for fuzzy matching, it can actually be too precise. While diacritics provide the extra precision for linguists, they can be considered noise in comparison logic that expects high recall on fuzzy comparisons. For that reason, when normalizing full-fidelity IPA into NUPhone, diacritics found in standard IPA can be removed.
+The International Phonetic Alphabet (IPA) is a highly embraced standard representation for sounds. Professional linguists often use it to provide clear phonetic representation for any language. However, when used for fuzzy matching, it can actually be too precise. While diacritics provide the extra precision for linguists, they can be considered noise in comparison logic that expects high recall on fuzzy comparisons. For that reason, when normalizing full-fidelity IPA into NUPhone, diacritics found in standard IPA can be removed.  To be clear, NUPhone is not optimized for linguists. Instead it is optimized to streamline phonetic comparison logic, phoneme-by-phoneme.
 
-Still, NUPhone deals not only with normalization, but also with uncertainty. For example, \<read\> has two pronunciations. In IPA, we might represent the past and present tenses of this verb in this manner:
+NUPhone is concerned about more than just normalization, it alsoe represents uncertainty. For example, <read> has two pronunciations. In IPA, we might represent the past and present tenses of this verb in this manner:
 
 [rɛd] or [rid]
 
