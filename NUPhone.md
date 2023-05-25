@@ -60,3 +60,48 @@ In this repo, I am tweaking my original H&T algorithm to utilize NUPhone represe
 4) [arpabet-to-ipa/App.php at master · wwesantos/arpabet-to-ipa · GitHub](https://github.com/wwesantos/arpabet-to-ipa/blob/master/src/App.php)
 
 H&T uses a similarity paradigm. Rolling up a similarity score for a word, based upon the similarity of its components is altogether intuitive. Even Bing [GPT-4] seems to be in full accord. Stay tuned for source code. Coding will be Rust or C++.
+
+### The "Bag of Phonemes" approach
+
+Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonetic Features" (BoPF) approach. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" can be compactly for any NUPhone string representation.
+
+My "Bag of Phonetic Features" transcription for any string token behaves like a checksum for the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
+
+Comparison logic performs a bitwise-AND between the two strings, and also a bitwise-OR between the two strings. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits().
+
+For a given {str1, str2}. The score is a combination of simple integer math, and hash-map lookups:
+
+```C#
+
+uint get_bag(string phone)
+{
+    uint bag = 0;
+    for (char c in phone)
+    {
+        uint vector = phoneme_embeddings[c];
+        bag |= vector;
+    }
+    return bag;
+}
+string str1 = "foo";
+string str2 = "bar";
+string phone1 = nuphone(str1);
+string phone2 = nuphone(str2);
+uint bag1 = get_bag(phone1);
+uint bag2 = get_bag(phone2);
+uint and_ed = bag1 & bag2;
+uint or_ed = bag1 | bag2;
+uint and_cnt = cnt_bits(and_ed);
+uint or_cnt = cnt_bits(or_ed);
+uint score = (100 * and_cnt) / or_cnt;
+
+// A score close to 100 is a high score (100% match). However, this a fuzzy score.
+// It does not represent 100 similarity. Tuning will be required to figure out thresholds
+// for appropriate levels of recall. Other algorithms, such as H&T will be used to filter
+// out the outliers
+```
+
+
+
+
+
