@@ -63,7 +63,7 @@ H&T uses a similarity paradigm. Rolling up a similarity score for a word, based 
 
 ### The "Bag of Phonemes" approach
 
-Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonetic Features" (BoPF) approach. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" can be compactly for any NUPhone string representation.
+Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonetic Features" (BoPF) approach. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" is compact for any NUPhone string representation.
 
 My "Bag of Phonetic Features" transcription for any string token behaves like a checksum for the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
 
