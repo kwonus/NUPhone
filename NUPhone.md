@@ -1,6 +1,6 @@
 # Normalized-Uncertainty Phonetic (NUPhone) Representation
 
-##### Version 1.0.3.523
+##### Version 1.0.3.525
 
 ### Introducing NUPhone
 
@@ -43,7 +43,7 @@ https://arxiv.org/pdf/2109.14796.pdf   [<u>Phonetic Word Embeddings</u>, Rahul S
 
 The paper, <u>Phonetic Word Embeddings</u> by Rahul Sharma et al, serves as a great foundation upon which to build fuzzy string comparison logic. There are two prevailing paradigms for fuzzy string comparisons: string-similarity metrics, and edit-distance metrics. Ratcliff/Obershelp (R/O) pattern recognition is an example of the former; Levenshtein distance is an example of the latter. I fundamentally prefer similarity metrics over distance metrics. However, the Levenshtein algorithm is more intuitively understood, and it is less CPU-intensive, when compared with Ratcliff/Obershelp.
 
-For whatever reason [perhaps CPU costs], Levenshtein distance seems to be the de facto standard for similarity assessment. Finding similar strings using difference metrics seems non-optimum, or just plain weird to me. Even this open-source effort by Microsoft Research favors Levenshtein:
+For whatever reason [perhaps CPU costs], Levenshtein distance seems to be the de facto standard for similarity assessment. Even this open-source effort by Microsoft Research favors Levenshtein:
 https://github.com/Microsoft/PhoneticMatching
 
 So given my affinity for similarity metrics over difference metrics, I am introducing the Heads & Tails (H&T) algorithm. Described herein, it can be characterized as a simplification of R/O. However, it was not conceived as a derivative of R/O (I discovered R/O, five or so years after my initial H/T implementation). Still, the similarity of H&T with R/O is notable. Under most use-cases, H&T should result in far fewer comparisons than R/O. I expect no degradation with it vis-à-vis R/O, when processing NUPhone representations of English tokens (I am less certain about other languages and orthographies). This document does not describe every difference between H&T and R/O, but it does identify some key differences.
@@ -59,11 +59,11 @@ In this repo, I am tweaking my original H&T algorithm to utilize NUPhone represe
 3) [The CMU Pronouncing Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict)
 4) [arpabet-to-ipa/App.php at master · wwesantos/arpabet-to-ipa · GitHub](https://github.com/wwesantos/arpabet-to-ipa/blob/master/src/App.php)
 
-H&T uses a similarity paradigm. Rolling up a similarity score for a word, based upon the similarity of its components is altogether intuitive. Even Bing [GPT-4] seems to be in full accord. Stay tuned for source code. Coding will be Rust or C++.
+H&T uses a similarity paradigm. Rolling up a similarity score for a word, based upon the similarity of its components is altogether intuitive. Even Bing [GPT-4] seems to be in full accord. Stay tuned for source code and something bigger: keep reading!
 
 ### The "Bag of Phonemes" approach
 
-Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonetic Features" (BoPF) approach. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" can be compactly for any NUPhone string representation.
+Another type of fuzzy string matching that will be explored here is what I call, the ""Bag of Phonemes" (BoP) approach. In tandem with the BoP, I incorporate a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" can be compactly for any NUPhone string representation.
 
 My "Bag of Phonetic Features" transcription for any string token behaves like a checksum for the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
 
@@ -101,7 +101,25 @@ uint score = (100 * and_cnt) / or_cnt;
 // out the outliers
 ```
 
+##### Table 1 - Course-Fuzzy Scoring
 
+### What happens when we combine all three things together?
 
+I am so glad that you asked this question. For now, I'll just provide hints:
 
+1. NUPhone strings will be generated for all tokens being compared.
 
+2. Phoneme embeddings will be generated for all tokens being compared. Consider these two polymorphic methods:
+
+   - embeddings(nuphone_str: utf8_char): returns Array\<uint\>
+
+   - embeddings(nuphone_str: utf8_string): returns Array\<uint\>
+
+3. Initial test for fuzzy matches will utilize course-fuzzy-scoring as as described in Table-1 using a Bag of Phonetic Features
+
+4. If score meets course-fuzzy-scoring threshold, it goes through granular-fuzzy-scoring. This is a two-part process:
+
+   - Part-1 -- single iteration of H&T executed to score only [up to] the first three characters of the NUPhone string and the last three characters of the NUPhone string. The remainder is passed to step 2
+   - Part-2 -- The remainder from H&T undergoes Jaccard similarity analysis via the Bag of Phonemes. The Bag of Phonemes analysis uses Cosine Similarity of each phoneme to determine the Union between the two discrete Bags of Phonemes. 
+
+Take a look at the companion word doc that can treat all English NUPhone as a pair of 3-bit signed integers and a couple of extra bits for voicing and phoneme type.
