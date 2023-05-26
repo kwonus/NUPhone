@@ -52,22 +52,20 @@ R/O considers the longest common substring (LCS) between two strings, in order t
 
 This is my first public announcement of the H&T algorithm. I originally conceived of it in 2016, while in pursuit of a Masters in Computational Linguistics at the University of Washington. During my coursework, I was performing word alignment between bitexts using H&T. Specifically, I was aligning the words of an early French translation of the bible with the words of an early English version of the bible in conjunction with machine translation to align the bitexts. Without providing the full details here, suffice it to say that I quickly understood the merit of the H&T processing concept, even though it sat dormant until now. Interestingly, the academic paper, cited above, likewise ascribes merit to word endings [H&T prefers both beginnings and endings].
 
-In this repo, I am tweaking my original H&T algorithm to utilize NUPhone representation. There are a number freely available tabular resources for IPA and ARPAbet. These can easily be incorporated into a general-purpose English-to-NUPhone generator:
+In this repo, I am tweaking my original H&T algorithm to generate NUPhone representation. There are a number freely available tabular resources for IPA and ARPAbet. These can easily be incorporated into a general-purpose English-to-NUPhone generator:
 
 1) [The 44 Phonemes in English (dyslexia-reading-well.com)](https://www.dyslexia-reading-well.com/44-phonemes-in-english.html)
 2) [ipa-dict/en_US.txt at master · open-dict-data/ipa-dict · GitHub](https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt)
 3) [The CMU Pronouncing Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict)
 4) [arpabet-to-ipa/App.php at master · wwesantos/arpabet-to-ipa · GitHub](https://github.com/wwesantos/arpabet-to-ipa/blob/master/src/App.php)
 
-H&T uses a similarity paradigm. Rolling up a similarity score for a word, based upon the similarity of its components is altogether intuitive. Even Bing [GPT-4] seems to be in full accord. Stay tuned for source code and something bigger: keep reading!
-
 ### The "Bag of Phonemes" approach
 
-Another type of fuzzy string matching that will be explored here is what I call, the ""Bag of Phonemes" (BoP) approach. In tandem with the BoP, I incorporate a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that that seems infinite. This is why BoW algorithms sometimes employ TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW, because mostly only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character can easily fit in a 128-bit integer [perhaps even in a 64-bit integer], our "Bag of Phonetic Features" can be compactly for any NUPhone string representation.
+Another type of fuzzy string matching that will be explored here is what I call, the ""Bag of Phonemes" (BoP) approach. In tandem with the BoP, I incorporate a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that seems infinite. This is why old-fashioned BoW algorithms often employed TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW or TF-IDF, because these days, only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character for English can easily fit in a 64-bit integer [perhaps even in a 32-bit integer], our "Bag of Phonetic Features" can be compactly represented for any NUPhone English string.
 
-My "Bag of Phonetic Features" transcription for any string token behaves like a checksum for the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
+My "Bag of Phonetic Features" transcription for any string token behaves like a checksum on the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
 
-Comparison logic performs a bitwise-AND between the two strings, and also a bitwise-OR between the two strings. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits().
+Comparison logic performs a bitwise-AND between the two strings, and also a bitwise-OR between the two strings. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits(). The whole operational sequence feels a lot like Jaccard.
 
 For a given {str1, str2}. The score is a combination of simple integer math, and hash-map lookups:
 
@@ -101,7 +99,7 @@ uint score = (100 * and_cnt) / or_cnt;
 // out the outliers
 ```
 
-##### Table 1 - Course-Fuzzy Scoring
+##### Table 1 - Course-Fuzzy Scoring using BoPF
 
 ### What happens when we combine all three things together?
 
@@ -111,15 +109,15 @@ I am so glad that you asked this question. For now, I'll just provide hints:
 
 2. Phoneme embeddings will be generated for all tokens being compared. Consider these two polymorphic methods:
 
-   - embeddings(nuphone_str: utf8_char): returns Array\<uint\>
+   - embeddings(nuphone_str: utf8_char): returns Array\<byte\>
 
-   - embeddings(nuphone_str: utf8_string): returns Array\<uint\>
+   - embeddings(nuphone_str: utf8_string): returns Array\<byte\>
 
-3. Initial test for fuzzy matches will utilize course-fuzzy-scoring as as described in Table-1 using a Bag of Phonetic Features
+3. OPTIONAL: Initial test for fuzzy matches will utilize course-fuzzy-scoring as as described in Table-1 using a Bag of Phonetic Features
 
 4. If score meets course-fuzzy-scoring threshold, it goes through granular-fuzzy-scoring. This is a two-part process:
 
    - Part-1 -- single iteration of H&T executed to score only [up to] the first three characters of the NUPhone string and the last three characters of the NUPhone string. The remainder is passed to step 2
-   - Part-2 -- The remainder from H&T undergoes Jaccard similarity analysis via the Bag of Phonemes. The Bag of Phonemes analysis uses Cosine Similarity of each phoneme to determine the Union between the two discrete Bags of Phonemes. 
-
-Take a look at the companion word doc that can treat all English NUPhone as a pair of 3-bit signed integers and a couple of extra bits for voicing and phoneme type.
+   - Part-2 -- The remainder [when max(size(nuphone_str1),size(nuphone_str1)) > 6] from H&T undergoes NUPhone similarity analysis via the Bag of Phonemes. The companion word doc reveals how English NUPhone similarity analysis is driven by a pair of 3-bit signed integers and a couple of extra bits for voicing and phoneme type.  A Jaccard-like union analysis will be performed between the two bags of phonemes under comparison. We might save BoPF for another day.
+   
+   See the companion word doc for further insights.
