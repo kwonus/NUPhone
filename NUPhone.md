@@ -124,7 +124,7 @@ I am so glad that you asked this question. For now, I'll just provide hints:
    
        (The remainder is not merely the leftover string; instead, the remainder includes one phoneme to the left of the remainder and one phoneme to the right of the remainder)
      
-   - Step-2 -- Score the bag of phonemes on each of the three segment-pairs created in step one using a greedy union processing using NUPhone scoring. Doc the first segment 5 point (5%) when the first phonemes have differing phoneme types (consonant != vowel). This is only performed on the first segment.
+   - Step-2 -- Score the bag of phonemes on each of the three segment-pairs created in step one using a greedy union processing using NUPhone scoring. Doc the first segment 5 points (5%) when the first phonemes have differing phoneme types (consonant != vowel). This is only performed on the first segment.
    - Step-3 -- Roll-up the scores, averaging the score of each segment and weighted by the max(strlen()).
    
    A Jaccard-like union analysis will be performed between each bag of phonemes pair. We will save BoPF for another day. See the companion word doc for further insights. 
