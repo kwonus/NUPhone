@@ -115,9 +115,14 @@ I am so glad that you asked this question. For now, I'll just provide hints:
 
 3. OPTIONAL: Initial test for fuzzy matches will utilize course-fuzzy-scoring as as described in Table-1 using a Bag of Phonetic Features
 
-4. If score meets course-fuzzy-scoring threshold, it goes through granular-fuzzy-scoring. This is a two-part process:
+4. If score meets course-fuzzy-scoring threshold, it goes through granular-fuzzy-scoring. This is a three-step process:
 
-   - Part-1 -- single iteration of H&T executed to score only [up to] the first three characters of the NUPhone string and the last three characters of the NUPhone string. The remainder is passed to step 2
-   - Part-2 -- The remainder [when max(size(nuphone_str1),size(nuphone_str1)) > 6] from H&T undergoes NUPhone similarity analysis via the Bag of Phonemes. The companion word doc reveals how English NUPhone similarity analysis is driven by a pair of 3-bit signed integers and a couple of extra bits for voicing and phoneme type.  A Jaccard-like union analysis will be performed between the two bags of phonemes under comparison. We might save BoPF for another day.
+   - Step-1 -- Split the string into three parts:
+     - create bag of phonemes on the first three characters
+     - create bag of phonemes on the last three characters (when strlen() >= 4
+     - create bag of phonemes on the remainder when strlen() >= 7
    
-   See the companion word doc for further insights.
+   - Step-2 -- Score the bag of phonemes on each of the three segment-pairs created in step one using a greedy union processing using NUPhone scoring.
+   - Step-3 -- Roll-up the scores, averaging the score of each segment and weighted by the max(strlen()).
+   
+   A Jaccard-like union analysis will be performed between each bag of phonemes pair. We will save BoPF for another day. See the companion word doc for further insights. 
