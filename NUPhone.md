@@ -1,12 +1,12 @@
 # Normalized-Uncertainty Phonetic (NUPhone) Representation
 
-##### Version 1.0.3.525
+##### Version 1.0.3.602
 
 ### Introducing NUPhone
 
 The International Phonetic Alphabet (IPA) is a highly embraced standard representation for sounds. Professional linguists often use it to provide clear phonetic representation for any language. However, when used for fuzzy matching, it can actually be too precise. While diacritics provide the extra precision for linguists, they can be considered noise in comparison logic that expects high recall on fuzzy comparisons. For that reason, when normalizing full-fidelity IPA into NUPhone, diacritics found in standard IPA can be removed.  To be clear, NUPhone is not optimized for linguists. Instead it is optimized to streamline phonetic comparison logic, phoneme-by-phoneme.
 
-NUPhone is concerned about more than just normalization, it also represents uncertainty. For example, <read> has two pronunciations. In IPA, we might represent the past and present tenses of this verb in this manner:
+NUPhone is concerned about more than just normalization, it also represents uncertainty. For example, \<read\> has two pronunciations. In IPA, we might represent the past and present tenses of this verb in this manner:
 
 [rɛd] or [rid]
 
@@ -26,7 +26,7 @@ NUPhone is very opinionated about eliminating redundancy in expressions. We stro
 
 While the above representation might be easier to generate from lookup tables, comparison logic would be more expensive. The parts that are similar among the variant phonetic representations are expected to be outside of the squiggly braces.
 
-### Heads & Tails String-Matching
+### Comparison processing via Cartesian Coordinates on NUPhone Representations
 
 While there are numerous opportunities to pursue cross-orthography fuzzy string comparisons and search logic, this open-source effort is narrowly focused on Modern English and Early Modern English [as found in the King James Bible]. By narrowing the focus to a mostly singular language domain, the problem-space is greatly simplified. Large tech companies, like Microsoft, provide more sophisticated solutions for cross-language processing.
 
@@ -35,24 +35,20 @@ That said, let's look at ways to speed up similarity processing for English-lang
 On 23 May 2023, I had this short conversation with Bing:
 ![phone-embedding](./bing.png)
 
-I was rightly impressed with her response. Given her insight, let's also consider the value proposition of using phonemes for sounds-alike searching. We will not only look for ways ways to speed up similarity processing, but we will consciencely seek a design that provides a broader spectrum of results with high fidelity.
+I was rightly impressed with her response. Given her insight, let's also consider the value proposition of using phonemes for sounds-alike searching. We will not only look for ways ways to speed up similarity processing, but we will consciencely seek a design that provides a broad spectrum of results with high fidelity.
 
-This academic paper describes how phoneme embeddings and similarity measurements can be rolled-up into whole-token comparisons:
+The following academic paper describes how phoneme embeddings and similarity measurements can be rolled-up into whole-token comparisons: https://arxiv.org/pdf/2109.14796.pdf   [<u>Phonetic Word Embeddings</u>, Rahul Sharma et al]
 
-https://arxiv.org/pdf/2109.14796.pdf   [<u>Phonetic Word Embeddings</u>, Rahul Sharma et al]
-
-The paper, <u>Phonetic Word Embeddings</u> by Rahul Sharma et al, serves as a great foundation upon which to build fuzzy string comparison logic. There are two prevailing paradigms for fuzzy string comparisons: string-similarity metrics, and edit-distance metrics. Ratcliff/Obershelp (R/O) pattern recognition is an example of the former; Levenshtein distance is an example of the latter. I fundamentally prefer similarity metrics over distance metrics. However, the Levenshtein algorithm is more intuitively understood, and it is less CPU-intensive, when compared with Ratcliff/Obershelp.
+There are two prevailing paradigms for fuzzy string comparisons: string-similarity metrics, and edit-distance metrics. Ratcliff/Obershelp (R/O) pattern recognition is an example of the former; Levenshtein distance is an example of the latter.
 
 For whatever reason [perhaps CPU costs], Levenshtein distance seems to be the de facto standard for similarity assessment. Even this open-source effort by Microsoft Research favors Levenshtein:
 https://github.com/Microsoft/PhoneticMatching
 
-So given my affinity for similarity metrics over difference metrics, I am introducing the Heads & Tails (H&T) algorithm. Described herein, it can be characterized as a simplification of R/O. However, it was not conceived as a derivative of R/O (I discovered R/O, five or so years after my initial H/T implementation). Still, the similarity of H&T with R/O is notable. Under most use-cases, H&T should result in far fewer comparisons than R/O. I expect no degradation with it vis-à-vis R/O, when processing NUPhone representations of English tokens (I am less certain about other languages and orthographies). This document does not describe every difference between H&T and R/O, but it does identify some key differences.
+I use a derivative of what I call Heads & Tails (H&T) processing. From the outside looking in, one might characterize H&T as a simplification of R/O. However, it was not conceived as a derivative of R/O (I discovered R/O, five or so years after my initial H&T implementation). Still, the similarity of H&T with R/O is notable. Under most use-cases, H&T should result in far fewer comparisons than R/O. This document does not describe every difference between H&T and R/O, but it does identify one minor difference.  R/O considers the longest common substring (LCS) between two strings, in order to drive comparison logic. H&T simplifies this, by favoring LCS candidates on the head of the string and on the tail of the string. That minor change simplifies remainder-processing. 
 
-R/O considers the longest common substring (LCS) between two strings, in order to drive comparison logic. H&T simplifies this, by only considering two LCS candidates: the start of the two strings; and the end of the two strings. That minor change dramatically simplifies remainder-processing. Moreover, it reduces the frequency of character-by-character comparisons. Meanwhile, H&T implementations become substantially less complex than R/O implementations. Simplification, in turn, makes H&T derivatives more intuitive. To be clear, Levenshtein is easier to understand than R/O. Yet, H&T and Levenshtein are on a more level playing field. While the R/O algorithm demands recursive implementations and scoring accumulators, H&T can be implemented with iterative processing and simple += scoring.
+This is my first public announcement of the H&T algorithm. I originally conceived of it in 2016, while in pursuit of a Masters in Computational Linguistics at the University of Washington. During my coursework, I was performing word alignment between bitexts using H&T. Specifically, I was aligning the words of an early French translation of the bible with the words of an early English version of the bible in conjunction with machine translation to align the bitexts. I always knew I would come back to this processing concept, even though it has sat dormant until now. 
 
-This is my first public announcement of the H&T algorithm. I originally conceived of it in 2016, while in pursuit of a Masters in Computational Linguistics at the University of Washington. During my coursework, I was performing word alignment between bitexts using H&T. Specifically, I was aligning the words of an early French translation of the bible with the words of an early English version of the bible in conjunction with machine translation to align the bitexts. Without providing the full details here, suffice it to say that I quickly understood the merit of the H&T processing concept, even though it sat dormant until now. Interestingly, the academic paper, cited above, likewise ascribes merit to word endings [H&T prefers both beginnings and endings].
-
-In this repo, I am tweaking my original H&T algorithm to generate NUPhone representation. There are a number freely available tabular resources for IPA and ARPAbet. These can easily be incorporated into a general-purpose English-to-NUPhone generator:
+In this repo, I am providing H&T implementation that generates NUPhone representations. There are a number freely available tabular resources for IPA and ARPAbet. These can easily be incorporated into a general-purpose English-to-NUPhone generator:
 
 1) [The 44 Phonemes in English (dyslexia-reading-well.com)](https://www.dyslexia-reading-well.com/44-phonemes-in-english.html)
 2) [ipa-dict/en_US.txt at master · open-dict-data/ipa-dict · GitHub](https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt)
@@ -61,11 +57,9 @@ In this repo, I am tweaking my original H&T algorithm to generate NUPhone repres
 
 ### The "Bag of Phonemes" approach
 
-Another type of fuzzy string matching that will be explored here is what I call, the ""Bag of Phonemes" (BoP) approach. In tandem with the BoP, I incorporate a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that seems infinite. This is why old-fashioned BoW algorithms often employed TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW or TF-IDF, because these days, only the name construction is inspiring in this domain.  When you consider that the number of features associated with a NUPhone character for English can easily fit in a 64-bit integer [perhaps even in a 32-bit integer], our "Bag of Phonetic Features" can be compactly represented for any NUPhone English string.
+Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonemes" (BoP) approach. In tandem with the BoP, I also introduce a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that seems almost infinite. This is why old-fashioned BoW algorithms often employed TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW or TF-IDF, because these days, only the name construction(i.e. "Bag of X") is inspiring.  
 
-My "Bag of Phonetic Features" transcription for any string token behaves like a checksum on the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. 
-
-Comparison logic performs a bitwise-AND between the two strings, and also a bitwise-OR between the two strings. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits(). The whole operational sequence feels a lot like Jaccard.
+My "Bag of Phonetic Features" transcription for any string token behaves like a checksum on the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. Comparison logic performs a bitwise-AND between the two feature vectors, and also a bitwise-OR between the two feature vectors. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits().
 
 For a given {str1, str2}. The score is a combination of simple integer math, and hash-map lookups:
 
@@ -94,37 +88,23 @@ uint or_cnt = cnt_bits(or_ed);
 uint score = (100 * and_cnt) / or_cnt;
 
 // A score close to 100 is a high score (100% match). However, this a fuzzy score.
-// It does not represent 100 similarity. Tuning will be required to figure out thresholds
+// It does not represent 100% similarity. Tuning will be required to figure out thresholds
 // for appropriate levels of recall. Other algorithms, such as H&T will be used to filter
 // out the outliers
 ```
 
 ##### Table 1 - Course-Fuzzy Scoring using BoPF
 
-### What happens when we combine all three things together?
+### What happens when we combine H&T, Nuphone, and BoP?
 
-I am so glad that you asked this question. For now, I'll just provide hints:
+1. NUPhone representations will be generated for both tokens being compared.
+2. Phoneme embeddings will be generated for both NUPhone representations. Consider these two polymorphic methods:
 
-1. NUPhone strings will be generated for all tokens being compared.
-
-2. Phoneme embeddings will be generated for all tokens being compared. Consider these two polymorphic methods:
-
-   - embeddings(nuphone_str: utf8_char): returns Array\<byte\>
+   - embeddings(nuphone_str: utf8_char): returns byte
 
    - embeddings(nuphone_str: utf8_string): returns Array\<byte\>
 
-3. OPTIONAL: Initial test for fuzzy matches will utilize course-fuzzy-scoring as as described in Table-1 using a Bag of Phonetic Features
+   - Unlike most embeddings that have a discrete feature for each characteristic, my embeddings are a simple cartesian coordinate system. Well really, two distinct coordinate systems: one set of coordinates for Consonants and another set for Vowels. The value of an X+Y coordinate system  this is that distance is easily calculated using only bit-shifts and primitive integer calculations. Moreover, constraining ourselves to just English, the entire coordinate system is fully represented in a single byte. That's right! All phonetic features of any English NUPhone character is compactly represented in a single byte: two 3-bit integers for the X & Y axes. The remaining 2 bits tell us if it is a vowel or a voiced/unvoiced consonant.
+3. Prescoring can preempt comparisons of differing phoneme lengths where the absolute maximum similarity cannot possibly meet threshold. (e.g. Comparing an 8 phonemes with a 12 phonemes can never exceed a 75% match). Prescoring can substantially reduce the number of comparisons required across an entire lexicon. For that reason, we partition our lexicon by length of the nuphone transcription.
 
-4. If score meets course-fuzzy-scoring threshold, it goes through granular-fuzzy-scoring. This is a three-step process:
-
-   - Step-1 -- Split the string into three parts:
-     - create bag of phonemes on the first three characters
-     - create bag of phonemes on the last three characters (when strlen() >= 4
-     - create bag of phonemes on the remainder when strlen() >= 6
-   
-       (The remainder is not merely the leftover string; instead, the remainder includes one phoneme to the left of the remainder and one phoneme to the right of the remainder)
-     
-   - Step-2 -- Score the bag of phonemes on each of the three segment-pairs created in step one using a greedy union processing using NUPhone scoring. Doc the first segment 5 points (5%) when the first phonemes have differing phoneme types (consonant != vowel). This is only performed on the first segment.
-   - Step-3 -- Roll-up the scores, averaging the score of each segment and weighted by the max(strlen()).
-   
-   A Jaccard-like union analysis will be performed between each bag of phonemes pair. We will save BoPF for another day. See the companion word doc for further insights. 
+I am in the process of experimenting with such an integration. The source directories reveal the current status of my experimentation.
