@@ -19,4 +19,4 @@ NUPhone is very opinionated about eliminating redundancy in expressions. We stro
 
 \* {rɛd|rid}
 
-While the above representation might be easier to generate from lookup tables, comparison logic would be more expensive. The parts that are similar among the variant phonetic representations are expected to be outside of the squiggly braces.
+While the above representation might be generated with more simplistic logic, comparison logic would be more expensive. The parts that are similar among the variant phonetic representations are expected to be outside of the squiggly braces.
