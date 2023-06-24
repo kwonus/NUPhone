@@ -1,6 +1,6 @@
 # Normalized-Uncertainty Phonetic (NUPhone) Representation
 
-##### Version 1.0.3.602
+##### Version 1.0.3.618
 
 ### Introducing NUPhone
 
@@ -44,22 +44,24 @@ There are two prevailing paradigms for fuzzy string comparisons: string-similari
 For whatever reason [perhaps CPU costs], Levenshtein distance seems to be the de facto standard for similarity assessment. Even this open-source effort by Microsoft Research favors Levenshtein:
 https://github.com/Microsoft/PhoneticMatching
 
-I use a derivative of what I call Heads & Tails (H&T) processing. From the outside looking in, one might characterize H&T as a simplification of R/O. However, it was not conceived as a derivative of R/O (I discovered R/O, five or so years after my initial H&T implementation). Still, the similarity of H&T with R/O is notable. Under most use-cases, H&T should result in far fewer comparisons than R/O. This document does not describe every difference between H&T and R/O, but it does identify one minor difference.  R/O considers the longest common substring (LCS) between two strings, in order to drive comparison logic. H&T simplifies this, by favoring LCS candidates on the head of the string and on the tail of the string. That minor change simplifies remainder-processing. 
+I use what I call Heads & Tails (H&T) processing. Originally conceived in 2016, H&T is my invention. Still, from the outside looking in, one might characterize H&T as a simplification of R/O. However, I discovered R/O, five or so years after my initial H&T implementation. Yet, the similarity of H&T with R/O is notable. Under most use-cases, H&T should yield far fewer comparisons than R/O. This document does not describe every difference between H&T and R/O, but it does identify the primary difference.  R/O considers the longest common substring (LCS) between two strings, in order to drive comparison logic. H&T simplifies this, by favoring LCS candidates on the head of the string and on the tail of the string. That minor difference greatly simplifies remainder-processing. 
 
-This is my first public announcement of the H&T algorithm. I originally conceived of it in 2016, while in pursuit of a Masters in Computational Linguistics at the University of Washington. During my coursework, I was performing word alignment between bitexts using H&T. Specifically, I was aligning the words of an early French translation of the bible with the words of an early English version of the bible in conjunction with machine translation to align the bitexts. I always knew I would come back to this processing concept, even though it has sat dormant until now. 
+This is my first public release of the H&T algorithm, but it is not my first implementation.  While in pursuit of a Masters in Computational Linguistics at the University of Washington, as part of my coursework, I devised H&T to perform word alignment between bitexts. Specifically, I was aligning the words of an early French translation of the bible with the words of an early English version of the bible in conjunction with machine translation to align the bitexts. I always felt that I would revisit this processing concept, even though it has remained dormant until now. 
 
-In this repo, I am providing H&T implementation that generates NUPhone representations. There are a number freely available tabular resources for IPA and ARPAbet. These can easily be incorporated into a general-purpose English-to-NUPhone generator:
+In this repo, I am providing an H&T implementation that compares NUPhone representations using a difference metric on phoneme embeddings. My difference metric treats manor and place of articulation as an X&Y axis. Vowels similarly use frontness/backness and open/close as X&Y. There are a number freely available tabular resources for IPA and ARPAbet. Some of these are incorporated into a general-purpose English-to-NUPhone generator:
 
 1) [The 44 Phonemes in English (dyslexia-reading-well.com)](https://www.dyslexia-reading-well.com/44-phonemes-in-english.html)
 2) [ipa-dict/en_US.txt at master · open-dict-data/ipa-dict · GitHub](https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt)
 3) [The CMU Pronouncing Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict)
 4) [arpabet-to-ipa/App.php at master · wwesantos/arpabet-to-ipa · GitHub](https://github.com/wwesantos/arpabet-to-ipa/blob/master/src/App.php)
 
+The generated NUPhone representations are scored for similarity using a roll-up of similarities based upon the phoneme embeddings via the X&Y coordinate systems described above. As my initial implementation found herein is English-only, I am able to represent the full spectrum of phoneme embeddings in a single 8-bit integer. If this integer where expanded to 16-bits, scoring could easily accommodate additional languages.  However, in this repo Modern English and Early-Modern English are my sole focus. As such, broadening support for additional languages is not to be expected in this current repo.
+
 ### The "Bag of Phonemes" approach
 
-Another type of fuzzy string matching that will be explored here is what I call, the "Bag of Phonemes" (BoP) approach. In tandem with the BoP, I also introduce a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that seems almost infinite. This is why old-fashioned BoW algorithms often employed TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW or TF-IDF, because these days, only the name construction(i.e. "Bag of X") is inspiring.  
+Another type of fuzzy string matching that could be explored is what I call, the "Bag of Phonemes" (BoP) approach. In tandem with the BoP, I also introduce a "Bag of Phonetic Features" (BoPF). The BoPF is a compact, but lossy representation of the BoP for the entire token. Unlike a "Bag of Words" (BoW) algorithm, the feature dimensions for NUPhone is quite finite. This is unlike a lexicon of words that seems almost infinite. This is why old-fashioned BoW algorithms often employed TF-IDF [Term-Frequency, Inverse-Document-Frequency]. We won't explore BoW or TF-IDF, because these days, only the name construction(i.e. "Bag of X") is inspiring.  
 
-My "Bag of Phonetic Features" transcription for any string token behaves like a checksum on the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. Comparison logic performs a bitwise-AND between the two feature vectors, and also a bitwise-OR between the two feature vectors. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits().
+My "Bag of Phonetic Features" transcription process behaves like a checksum on the NUPhone string. The presence of a bit means that at least one phoneme in the string had that feature. Comparison logic performs a bitwise-AND between the two feature vectors, and also a bitwise-OR between the two feature vectors. We have a global function that converts English strings to NUPhone, and we call it nuphone(). Likewise, we have a global function that counts-1-bits (all non-zero bits) and we call this cnt_bits().
 
 For a given {str1, str2}. The score is a combination of simple integer math, and hash-map lookups:
 
@@ -95,7 +97,11 @@ uint score = (100 * and_cnt) / or_cnt;
 
 ##### Table 1 - Course-Fuzzy Scoring using BoPF
 
-### What happens when we combine H&T, Nuphone, and BoP?
+### Status of BoP and BoPF
+
+At the moment, BoP and BoPF are being deferred for any further exploration.
+
+### Combining H&T with NUPhone
 
 1. NUPhone representations will be generated for both tokens being compared.
 2. Phoneme embeddings will be generated for both NUPhone representations. Consider these two polymorphic methods:
@@ -104,7 +110,7 @@ uint score = (100 * and_cnt) / or_cnt;
 
    - embeddings(nuphone_str: utf8_string): returns Array\<byte\>
 
-   - Unlike most embeddings that have a discrete feature for each characteristic, my embeddings are a simple cartesian coordinate system. Well really, two distinct coordinate systems: one set of coordinates for Consonants and another set for Vowels. The value of an X+Y coordinate system  this is that distance is easily calculated using only bit-shifts and primitive integer calculations. Moreover, constraining ourselves to just English, the entire coordinate system is fully represented in a single byte. That's right! All phonetic features of any English NUPhone character is compactly represented in a single byte: two 3-bit integers for the X & Y axes. The remaining 2 bits tell us if it is a vowel or a voiced/unvoiced consonant.
+   - Unlike most embeddings that have a discrete feature for each characteristic, my embeddings are a simple cartesian coordinate system. Well really, two distinct coordinate systems: one set of coordinates for Consonants and another set for Vowels. The value of an X+Y coordinate system is that calculating distance is trivial, using only bit-shifts and primitive integer calculations. Moreover, constraining ourselves to just English, the entire coordinate system is fully represented in a single byte. That's right! All phonetic features of any English NUPhone character is compactly represented in a single byte: two 3-bit integers for the X & Y axes. The remaining 2 bits tell us if it is a vowel or a voiced/unvoiced consonant.
 3. Prescoring can preempt comparisons of differing phoneme lengths where the absolute maximum similarity cannot possibly meet threshold. (e.g. Comparing an 8 phonemes with a 12 phonemes can never exceed a 75% match). Prescoring can substantially reduce the number of comparisons required across an entire lexicon. For that reason, we partition our lexicon by length of the nuphone transcription.
 
-I am in the process of experimenting with such an integration. The source directories reveal the current status of my experimentation.
+H&T first finds the LCS at the head of the string, and the LCS at the tail of the string. If these are overlapping, the highest scoring string is chosen. If they are not overlapping. In either case, the remainder is processed recursively by H&T.
