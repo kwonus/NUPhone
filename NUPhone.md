@@ -1,6 +1,6 @@
 # Normalized-Uncertainty Phonetic (NUPhone) Representation
 
-##### Version 1.0.3.618
+##### Version 1.0.3.624
 
 ### Introducing NUPhone
 
