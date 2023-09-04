@@ -10,12 +10,12 @@
             Console.OutputEncoding = Encoding.UTF8;
 
             var greetings = new NUPhoneGen("hello");
-            var world = new NUPhoneGen("world");
-            var whirl = new NUPhoneGen("buttering");
+            var world = new NUPhoneGen("wood");
+            var whirl = new NUPhoneGen("would");
 
             Console.WriteLine(greetings.Phonetic + " " + world.Phonetic);
 
-            UInt16? diff = world.Compare(whirl, 99);
+            UInt16? diff = world.Compare(whirl, 70);
 
             if (diff.HasValue)
             {

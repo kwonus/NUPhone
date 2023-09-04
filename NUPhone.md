@@ -1,6 +1,6 @@
 # Normalized-Uncertainty Phonetic (NUPhone) Representation
 
-##### Version 1.0.3.624
+##### Version 1.0.3.903
 
 ### Introducing NUPhone
 
@@ -114,3 +114,13 @@ At the moment, BoP and BoPF are being deferred for any further exploration.
 3. Prescoring can preempt comparisons of differing phoneme lengths where the absolute maximum similarity cannot possibly meet threshold. (e.g. Comparing an 8 phonemes with a 12 phonemes can never exceed a 75% match). Prescoring can substantially reduce the number of comparisons required across an entire lexicon. For that reason, we partition our lexicon by length of the nuphone transcription.
 
 H&T first finds the LCS at the head of the string, and the LCS at the tail of the string. If these are overlapping, the highest scoring string is chosen. If they are not overlapping, both are chosen. In either case, the remainder is processed recursively by H&T.
+
+### Generating NUPhone out of arbitrarily long lists of variations
+
+Building a NUPhone string from an arbitrarily long list of variants is non-trivial. In our initial implementation, we generate NUPhone as follows:
+
+1. Normalize all IPA [to only include IPA characters that have NUPhone features; Diacritics and spaces are removed].
+2. Group each IPA string by size. For each pair within a common normalized string length, score the pair. If the pair matches with a score >= 75%, Use braces notation to create variants. Additional variants that meet score, will be persisted into this same NUPhone string. Strings that do not meet threshold, generate another distinct NUPhone variant, which absorbs all remaining compatible IPA variants.
+3. For each string length grouping, one or more NUPhone variants will result. If there are K distinct IPA string lengths, then there will be at least K NUPhone variants. There will never be more NUPhone variants than actual IPA variants.
+
+To score each NUPhone-string pair, we just iterate across the string and roll-up the NUPhone-character scores and take the mean. NUPhone-similarity-score utilizes Manhattan distance for each NUPhone-character: as a NUPhone-Character can be a collection of characters, the character pairing with the highest score wins.

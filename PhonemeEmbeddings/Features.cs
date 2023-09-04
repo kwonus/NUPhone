@@ -1,10 +1,8 @@
 ﻿namespace PhonemeEmbeddings
 {
+    using Microsoft.VisualBasic;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.Reflection;
     using System.Text;
-    using static System.Net.Mime.MediaTypeNames;
 
     public abstract class Features
     {
@@ -51,9 +49,9 @@
         public const byte PHONEME_TYPE_MASK = 0xC0;
         public const byte PHONEME_TYPE_VOWEL = 0x00;
         public const byte PHONEME_TYPE_CONSONANT = 0x80;
-        public const byte PHONEME_TYPE_CONSONANT_VOICING = 0x40;
+        public const byte PHONEME_TYPE_CONSONANT_VOICING_BIT = 0x40;
         public const byte PHONEME_TYPE_CONSONANT_VOICELESS = PHONEME_TYPE_CONSONANT;
-        public const byte PHONEME_TYPE_CONSONANT_VOICED = PHONEME_TYPE_CONSONANT | PHONEME_TYPE_CONSONANT_VOICING;
+        public const byte PHONEME_TYPE_CONSONANT_VOICED = PHONEME_TYPE_CONSONANT | PHONEME_TYPE_CONSONANT_VOICING_BIT;
 
         public const byte PHONEME_FEATURES = 0x3F;
         public const byte PHONEME_FEATURES_X_AXIS_BIT_SHIFT = 3;
@@ -65,14 +63,14 @@
 
         // VOWEL FEATURES: CENTRALITY
         //
-        public const sbyte VOWEL_FRONT = -1;
-        public const sbyte VOWEL_CENTER = 0;
-        public const sbyte VOWEL_BACK = 1;
+        public const sbyte VOWEL_FRONT  = -1;
+        public const sbyte VOWEL_CENTER =  0;
+        public const sbyte VOWEL_BACK   =  1;
 
         public const byte VOWEL_CENTRALITY = PHONEME_FEATURES_X_AXIS;
-        public const byte VOWEL_CENTRALITY_FRONT = 0x5 << 3; // -1 (0x5)
+        public const byte VOWEL_CENTRALITY_FRONT  = 0x5 << 3; // -1 (0x5)
         public const byte VOWEL_CENTRALITY_CENTER = 0x4 << 3; // -0 (0x4)
-        public const byte VOWEL_CENTRALITY_BACK = 0x1 << 3; //  1 (0x1)
+        public const byte VOWEL_CENTRALITY_BACK   = 0x1 << 3; //  1 (0x1)
 
         public static sbyte? GetVowelCentrality(byte embeddings)
         {
@@ -81,55 +79,58 @@
 
         // VOWEL FEATURES: HEIGHT
         //
-        public const sbyte VOWEL_CLOSE = 2;
-        public const sbyte VOWEL_CLOSE_MID = 1;
-        public const sbyte VOWEL_MID = 0;
-        public const sbyte VOWEL_OPEN_MID = -1;
-        public const sbyte VOWEL_OPEN = -2;
+        public const sbyte VOWEL_CLOSE     =  2;
+        public const sbyte VOWEL_CLOSE_MID =  1;
+        public const sbyte VOWEL_MID       =  0;
+        public const sbyte VOWEL_OPEN_MID  = -1;
+        public const sbyte VOWEL_OPEN      = -2;
 
-        public const byte VOWEL_HEIGHT = PHONEME_FEATURES_Y_AXIS;
-        public const byte VOWEL_HEIGHT_CLOSE = 0x2; //  2
+        public const byte VOWEL_HEIGHT           = PHONEME_FEATURES_Y_AXIS;
+        public const byte VOWEL_HEIGHT_CLOSE     = 0x2; //  2
         public const byte VOWEL_HEIGHT_CLOSE_MID = 0x1; //  1
-        public const byte VOWEL_HEIGHT_MIDDLE = 0x4; // -0
-        public const byte VOWEL_HEIGHT_OPEN_MID = 0x5; // -1
-        public const byte VOWEL_HEIGHT_OPEN = 0x6; // -2
+        public const byte VOWEL_HEIGHT_MIDDLE    = 0x4; // -0
+        public const byte VOWEL_HEIGHT_OPEN_MID  = 0x5; // -1
+        public const byte VOWEL_HEIGHT_OPEN      = 0x6; // -2
 
         public static sbyte? GetVowelHeight(byte embeddings)
         {
             return Features.IsVowel(embeddings) ? GetYaxis(embeddings) : null;
         }
 
+        // CONSONANT FEATURES ON Y-AXIS
+        //
+
         // CONSONANT FEATURES: PLACE OF ARTICULATION
         //
         public const byte CONSONANT_PLACE = PHONEME_FEATURES_X_AXIS;
 
-        public const sbyte CONSONANT_BILABIAL = -3;
+        public const sbyte CONSONANT_BILABIAL    = -3;
         public const sbyte CONSONANT_LABIODENTAL = -2;
-        public const sbyte CONSONANT_DENTAL = -1;
-        public const sbyte CONSONANT_ALVEOLAR = 0;
-        public const sbyte CONSONANT_PALATAL = 1;
-        public const sbyte CONSONANT_VELAR = 2;
-        public const sbyte CONSONANT_GLOTTAL = 3;
+        public const sbyte CONSONANT_DENTAL      = -1;
+        public const sbyte CONSONANT_ALVEOLAR    =  0;
+        public const sbyte CONSONANT_PALATAL     =  1;
+        public const sbyte CONSONANT_VELAR       =  2;
+        public const sbyte CONSONANT_GLOTTAL     =  3;
 
-        public const byte CONSONANT_PLACE_BILABIAL = 0x7 << 3; // -3
+        public const byte CONSONANT_PLACE_BILABIAL    = 0x7 << 3; // -3
         public const byte CONSONANT_PLACE_LABIODENTAL = 0x6 << 3; // -2
-        public const byte CONSONANT_PLACE_DENTAL = 0x5 << 3; // -1
-        public const byte CONSONANT_PLACE_ALVEOLAR = 0x4 << 3; // -0
-        public const byte CONSONANT_PLACE_PALATAL = 0x1 << 3; //  1
-        public const byte CONSONANT_PLACE_VELAR = 0x2 << 3; //  2
-        public const byte CONSONANT_PLACE_GLOTTAL = 0x3 << 3; //  3
+        public const byte CONSONANT_PLACE_DENTAL      = 0x5 << 3; // -1
+        public const byte CONSONANT_PLACE_ALVEOLAR    = 0x4 << 3; // -0
+        public const byte CONSONANT_PLACE_PALATAL     = 0x1 << 3; //  1
+        public const byte CONSONANT_PLACE_VELAR       = 0x2 << 3; //  2
+        public const byte CONSONANT_PLACE_GLOTTAL     = 0x3 << 3; //  3
 
         // (ignored in English NUPhone)
         //
         public const sbyte CONSONANT_POSTALVEOLAR = CONSONANT_PALATAL;
-        public const sbyte CONSONANT_RETROFLEX = CONSONANT_PALATAL;
-        public const sbyte CONSONANT_UVULAR = CONSONANT_VELAR;
-        public const sbyte CONSONANT_PHARYNGEAL = CONSONANT_GLOTTAL;
+        public const sbyte CONSONANT_RETROFLEX    = CONSONANT_PALATAL;
+        public const sbyte CONSONANT_UVULAR       = CONSONANT_VELAR;
+        public const sbyte CONSONANT_PHARYNGEAL   = CONSONANT_GLOTTAL;
 
         public const byte CONSONANT_PLACE_POSTALVEOLAR = CONSONANT_PLACE_PALATAL;
-        public const byte CONSONANT_PLACE_RETROFLEX = CONSONANT_PLACE_PALATAL;
-        public const byte CONSONANT_PLACE_UVULAR = CONSONANT_PLACE_VELAR;
-        public const byte CONSONANT_PLACE_PHARYNGEAL = CONSONANT_PLACE_GLOTTAL;
+        public const byte CONSONANT_PLACE_RETROFLEX    = CONSONANT_PLACE_PALATAL;
+        public const byte CONSONANT_PLACE_UVULAR       = CONSONANT_PLACE_VELAR;
+        public const byte CONSONANT_PLACE_PHARYNGEAL   = CONSONANT_PLACE_GLOTTAL;
         //
         public static sbyte? GetConsonantPlace(byte embeddings)
         {
@@ -140,27 +141,27 @@
         //
         public const byte CONSONANT_MANOR = PHONEME_FEATURES_Y_AXIS;
 
-        public const sbyte CONSONANT_PLOSIVE = 2;
-        public const sbyte CONSONANT_NASAL = 1;
-        public const sbyte CONSONANT_FRICATIVE = 0;
-        public const sbyte CONSONANT_GLIDE = -1;
-        public const sbyte CONSONANT_LIQUID = -2;
+        public const sbyte CONSONANT_PLOSIVE   =  2;
+        public const sbyte CONSONANT_NASAL     =  1;
+        public const sbyte CONSONANT_FRICATIVE =  0;
+        public const sbyte CONSONANT_GLIDE     = -1;
+        public const sbyte CONSONANT_LIQUID    = -2;
 
-        public const byte CONSONANT_MANOR_PLOSIVE = 0x2; //  2
-        public const byte CONSONANT_MANOR_NASAL = 0x1; //  1
+        public const byte CONSONANT_MANOR_PLOSIVE   = 0x2; //  2
+        public const byte CONSONANT_MANOR_NASAL     = 0x1; //  1
         public const byte CONSONANT_MANOR_FRICATIVE = 0x4; // -0
-        public const byte CONSONANT_MANOR_GLIDE = 0x5; // -1
-        public const byte CONSONANT_MANOR_LIQUID = 0x6; // -2
+        public const byte CONSONANT_MANOR_GLIDE     = 0x5; // -1
+        public const byte CONSONANT_MANOR_LIQUID    = 0x6; // -2
 
         // (other manors of articulation are ignored in English NUPhone)
         //
         public const sbyte CONSONANT_TAP_OR_FLAP = CONSONANT_FRICATIVE;
-        public const sbyte CONSONANT_TRILL = CONSONANT_FRICATIVE;
-        public const sbyte CONSONANT_AFFRICATE = CONSONANT_FRICATIVE;
+        public const sbyte CONSONANT_TRILL       = CONSONANT_FRICATIVE;
+        public const sbyte CONSONANT_AFFRICATE   = CONSONANT_FRICATIVE;
 
         public const byte CONSONANT_MANOR_TAP_OR_FLAP = CONSONANT_MANOR_FRICATIVE;
-        public const byte CONSONANT_MANOR_TRILL = CONSONANT_MANOR_FRICATIVE;
-        public const byte CONSONANT_MANOR_AFFRICATE = CONSONANT_MANOR_FRICATIVE;
+        public const byte CONSONANT_MANOR_TRILL       = CONSONANT_MANOR_FRICATIVE;
+        public const byte CONSONANT_MANOR_AFFRICATE   = CONSONANT_MANOR_FRICATIVE;
 
         public static sbyte? GetConsonantManor(byte embeddings)
         {
@@ -171,65 +172,65 @@
         {
             // consonants ...
             { 'p', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_PLOSIVE     },
-            { 'b', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'b', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 't', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_PLOSIVE     },
-            { 'd', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'd', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ʈ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_PLOSIVE     },
-            { 'ɖ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɖ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'c', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_PLOSIVE     },
-            { 'ɟ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɟ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'k', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_PLOSIVE     },
-            { 'ɡ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɡ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'q', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_PLOSIVE     },
-            { 'ɢ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɢ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_PLOSIVE     | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ʔ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_GLOTTAL    | CONSONANT_MANOR_PLOSIVE     },
             { 'm', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_NASAL       },
-            { 'ɱ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'n', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɳ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɲ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ŋ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɴ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ʙ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'r', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ʀ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING },
-            { '?', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɾ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɽ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɱ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'n', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɳ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɲ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ŋ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɴ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_NASAL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ʙ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'r', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ʀ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_TRILL       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { '?', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɾ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɽ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_TAP_OR_FLAP | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ɸ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_FRICATIVE   },
-            { 'β', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'β', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_BILABIAL   | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'f', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_FRICATIVE   },
-            { 'v', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'v', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'θ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_DENTAL     | CONSONANT_MANOR_FRICATIVE   },
-            { 'ð', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_DENTAL     | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ð', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_DENTAL     | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 's', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_FRICATIVE   },
-            { 'z', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'z', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ʃ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_POSTALVEOLAR|CONSONANT_MANOR_FRICATIVE   },
-            { 'ʒ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_POSTALVEOLAR|CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ʒ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_POSTALVEOLAR|CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ʂ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_FRICATIVE   },
-            { 'ʐ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ʐ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ç', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_FRICATIVE   },
-            { 'ʝ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ʝ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'x', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_FRICATIVE   },
-            { 'ɣ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɣ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'χ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_FRICATIVE   },
-            { 'ʁ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ʁ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_UVULAR     | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ħ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PHARYNGEAL | CONSONANT_MANOR_FRICATIVE   },
-            { 'ʕ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PHARYNGEAL | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ʕ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PHARYNGEAL | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'h', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_GLOTTAL    | CONSONANT_MANOR_FRICATIVE   },
-            { 'ɦ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_GLOTTAL    | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING },
+            { 'ɦ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_GLOTTAL    | CONSONANT_MANOR_FRICATIVE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
             { 'ɬ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_AFFRICATE   },
-            { 'ɮ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_AFFRICATE   | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ʋ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɹ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɻ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'j', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɰ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'l', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ɭ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ʎ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING },
-            { 'ʟ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING },
-/*added*/   { 'w', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING }, // should also be bilabial, but this mechanism does not allow two places of articulation
+            { 'ɮ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_AFFRICATE   | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ʋ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_LABIODENTAL| CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɹ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɻ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'j', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɰ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_GLIDE       | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'l', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_ALVEOLAR   | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ɭ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_RETROFLEX  | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ʎ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_PALATAL    | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+            { 'ʟ', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING_BIT },
+/*added*/   { 'w', PHONEME_TYPE_CONSONANT | CONSONANT_PLACE_VELAR      | CONSONANT_MANOR_LIQUID      | PHONEME_TYPE_CONSONANT_VOICING_BIT }, // should also be bilabial, but this mechanism does not allow two places of articulation
             // vowels ...
             { 'i', PHONEME_TYPE_VOWEL | VOWEL_CENTRALITY_FRONT  | VOWEL_HEIGHT_CLOSE      },
             { 'y', PHONEME_TYPE_VOWEL | VOWEL_CENTRALITY_FRONT  | VOWEL_HEIGHT_CLOSE      },
@@ -396,6 +397,8 @@
                     {
                         result.Append(c);
                     }
+                    // Keep a list of the IPA characters that we do not support
+                    //
                     else if (!Features.Removals.Contains(c))
                     {
                         Features.Removals.Add(c);
@@ -406,6 +409,30 @@
             }
             return string.Empty;
         }
+#if FUTURE
+        public static Dictionary<int, HashSet<string>> ConflateNUPhoneVariants(string[] variants)
+        {
+            Dictionary<int, HashSet<string>> conflatedVariants = new();
+
+            bool postProcess = false;
+            foreach (var variant in variants)
+            {
+                int len = Features.NUPhoneLen(variant);
+                if (!conflatedVariants.ContainsKey(len))
+                    conflatedVariants[len] = new();
+                if (!conflatedVariants[len].Contains(variant))
+                    conflatedVariants[len].Add(variant);
+                if (postProcess)
+                    continue;
+                postProcess = conflatedVariants[len].Count > 1;
+            }
+            if (postProcess)
+            {
+                ;   // TODO: TO DO: we can do conflation later (it will happen in this block)
+            }
+            return conflatedVariants;
+        }
+#endif
         // static constructor
         //
         static Features()
