@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Text;
 
-    public abstract class Features
+    public class Features
     {
         public static sbyte GetXaxis(byte embeddings)
         {
@@ -353,10 +353,10 @@
             public string nuphone;
             public string actual;
         }
-        public static readonly Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>> nuphone_grapheme_lookup;
-        public static readonly Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>> nuphone_lexicon_lookup;
+        public readonly Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>> nuphone_grapheme_lookup;
+        public readonly Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>> nuphone_lexicon_lookup;
 
-        public static (string nuphone, string ipa) NormalizeIntoNUPhone(string[] variants)
+        public (string nuphone, string ipa) NormalizeIntoNUPhone(string[] variants)
         {
             // For now, we just pick the first one; Make a true nuphone representation later
             //
@@ -370,8 +370,8 @@
             }
             return (string.Empty, string.Empty);
         }
-        public static HashSet<char> Removals = new();
-        public static string NormalizeIntoNUPhone(string variant)
+        public HashSet<char> Removals = new();
+        public string NormalizeIntoNUPhone(string variant)
         {
             var trimmed = variant.Trim();   // this should be a NOOP, but just to be safe
 
@@ -399,9 +399,9 @@
                     }
                     // Keep a list of the IPA characters that we do not support
                     //
-                    else if (!Features.Removals.Contains(c))
+                    else if (!this.Removals.Contains(c))
                     {
-                        Features.Removals.Add(c);
+                        this.Removals.Add(c);
                     }
                 }
                 if (result.Length > 0)
@@ -437,13 +437,30 @@
         //
         static Features()
         {
-            var lexicon = new LexiconIPA("C:/src/NUPhone/PhonemeEmbeddings");
-
-            Features.nuphone_lexicon_lookup = new();
-            Features.nuphone_grapheme_lookup = new();
+        }
+        private static Features? SELF = null;
+        public static Features Instance
+        {
+            get
+            {
+                if (SELF == null)
+                {
+                    SELF = new Features();
+                }
+                return SELF;
+            }
+        }
+        // constructor
+        //
+        private Features()
+        {
+            this.nuphone_lexicon_lookup = new();
+            this.nuphone_grapheme_lookup = new();
 
             for (byte len = 1; len <= 4; len++)
-                Features.nuphone_grapheme_lookup[len] = new();
+                this.nuphone_grapheme_lookup[len] = new();
+
+            var lexicon = LexiconIPA.Instance;
 
             foreach (var ipa in Features.nuphone_primatives.Keys)
             {
@@ -459,7 +476,7 @@
                     if (len < 1 || len > 4)
                         continue;
 
-                    var table = Features.nuphone_grapheme_lookup[(byte)len];
+                    var table = this.nuphone_grapheme_lookup[(byte)len];
 
                     if (table.ContainsKey(text))
                     {
@@ -482,7 +499,7 @@
                 record.nuphone = item.nuphone;
                 record.actual = item.actual;
 
-                var table = Features.nuphone_grapheme_lookup[(byte)len];
+                var table = this.nuphone_grapheme_lookup[(byte)len];
 
                 if (table.ContainsKey(grapheme))
                 {
@@ -516,14 +533,14 @@
 
                     Dictionary<string, List<NUPhoneRecord>> table;
 
-                    if (Features.nuphone_lexicon_lookup.ContainsKey((byte)len))
+                    if (this.nuphone_lexicon_lookup.ContainsKey((byte)len))
                     {
-                        table = Features.nuphone_lexicon_lookup[(byte)len];
+                        table = this.nuphone_lexicon_lookup[(byte)len];
                     }
                     else
                     {
                         table = new();
-                        Features.nuphone_lexicon_lookup[(byte)len] = table;
+                        this.nuphone_lexicon_lookup[(byte)len] = table;
                     }
                     if (table.ContainsKey(lex))
                     {
@@ -552,13 +569,13 @@
             }
             return len;
         }
-        static internal (string nuphone, byte[] features) Generate(string word)
+        internal (string nuphone, byte[] features) Generate(string word)
         {
             (string nuphone, byte[] features) generated = (string.Empty, new byte[0]);
             var ipa = new NUPhoneGen(word);
             if (ipa.Phonetic.Length > 0)
             {
-                generated.nuphone = Features.NormalizeIntoNUPhone(ipa.Phonetic);
+                generated.nuphone = this.NormalizeIntoNUPhone(ipa.Phonetic);
                 var len = Features.NUPhoneLen(generated.nuphone);
                 byte i;
                 generated.features = new byte[len];

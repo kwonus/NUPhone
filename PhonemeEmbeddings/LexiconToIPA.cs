@@ -6,12 +6,26 @@ namespace PhonemeEmbeddings
 	//
     public class LexiconIPA
 	{
-		public Dictionary<string, string[]> ipa_primatives { get; private set; }
-		public LexiconIPA(string? home = null)
+		private static LexiconIPA? SELF = null;
+        public static LexiconIPA Instance 
 		{
-			this.ipa_primatives = new();
+			get
+			{
+				if (SELF == null)
+				{
+					SELF = new LexiconIPA();
+				}
+				return SELF;
+			}
+		}
+        public Dictionary<string, string[]> ipa_primatives { get; private set; }
+		private LexiconIPA(string? home = null)
+		{
+			LexiconIPA.SELF = this;
 
-            string path = Path.Combine((home != null ? home : "."), "en_US.txt").Replace('\\', '/');
+            this.ipa_primatives = new();
+
+            string path = Path.Combine((home != null ? home : "C:\\src\\NUPhone\\PhonemeEmbeddings"), "en_US.txt").Replace('\\', '/');
 			try
 			{
 				if (File.Exists(path))
@@ -34,7 +48,7 @@ namespace PhonemeEmbeddings
 								var variant = variants[v].Trim();
 								if (variant.EndsWith('/') && (variant.StartsWith('/') || (v == 0)))
 								{
-									variants[v] = Features.NormalizeIntoNUPhone(variant.Replace("/", ""));
+									variants[v] = Features.Instance.NormalizeIntoNUPhone(variant.Replace("/", ""));
 								}
 								else
 								{

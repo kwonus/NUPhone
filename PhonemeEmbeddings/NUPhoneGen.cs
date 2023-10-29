@@ -60,18 +60,7 @@ namespace PhonemeEmbeddings
         public NUPhoneGen(string word)
         {
             this.Word = word.Trim().ToLower();
-
-            var builder = new StringBuilder(word.Length);
-            var generated = this.Generate(word, ref builder);
-
-            if (generated && (builder.Length > 0))
-            {
-                this.Phonetic = builder.ToString();
-            }
-            else
-            {
-                this.Phonetic = string.Empty;
-            }
+            this.Phonetic = this.Generate(word);
         }
         private static byte[] SubBytes(byte[] input, int startIdx, int untilIdx)
         {
@@ -274,86 +263,83 @@ namespace PhonemeEmbeddings
                 default: return (UInt16) ( 3800 - penalty);
             }
         }
-        private bool Generate(string segment, ref StringBuilder accumulator, byte maxLen = byte.MaxValue)
+        private static string GetShortestVariant(List<NUPhoneRecord> variants)
         {
-            if (segment.Length <= byte.MaxValue)
+            string? variant = null;
+
+            foreach (var candidate in variants)
             {
-                var len = (byte)segment.Length;
+                var normalized = Features.Instance.NormalizeIntoNUPhone(candidate.nuphone);
+                if (variant == null || variant.Length > normalized.Length)
+                    variant = normalized;
+            }
+            return variant != null ? variant : string.Empty;
+        }
+        private enum Position
+        {
+            Left,
+            Right
+        };
+        private static Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>>[] graphemeFirst = new Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>>[]
+        {
+            Features.Instance.nuphone_grapheme_lookup,
+            Features.Instance.nuphone_lexicon_lookup
+        };
+        private static Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>>[] lexiconFirst = new Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>>[]
+        {
+            Features.Instance.nuphone_lexicon_lookup,
+            Features.Instance.nuphone_grapheme_lookup
+        };
+        private string Generate(string segment)
+        {
+            Dictionary<string, List<NUPhoneRecord>> table;
 
-                if (Features.nuphone_lexicon_lookup.ContainsKey(len))
+            var len = (byte)segment.Length;
+
+            foreach (var lookup in graphemeFirst)
+            {
+                if (lookup.ContainsKey(len))
                 {
-                    var table = Features.nuphone_lexicon_lookup[len];
+                    table = lookup[len];
 
                     if (table.ContainsKey(segment))
                     {
                         List<NUPhoneRecord> records = table[segment];
-                        foreach (var record in records)
-                        {
-                            string nuphone = record.nuphone;
-                            var normalized = Features.NormalizeIntoNUPhone(nuphone);
-                            accumulator.Append(normalized);
-                            return true;
-                        }
+                        return GetShortestVariant(records);
                     }
                 }
-                if (Features.nuphone_grapheme_lookup.ContainsKey(len))
-                {
-                    var table = Features.nuphone_grapheme_lookup[len];
-                    if (table.ContainsKey(segment))
-                    {
-                        List<NUPhoneRecord> records = table[segment];
-                        foreach (var record in records)
-                        {
-                            string nuphone = record.nuphone;
-                            var normalized = Features.NormalizeIntoNUPhone(nuphone);
-                            accumulator.Append(normalized);
-                            return true;
-                        }
-                    }
-                }
-                int slen = len;
-                for (--len; len >= 1; --len)
-                {
-                    var lookups = new Dictionary<byte, Dictionary<string, List<NUPhoneRecord>>>[]
-                    {
-                        Features.nuphone_grapheme_lookup,
-                        Features.nuphone_lexicon_lookup
-                    };
-                    foreach (var lookup in lookups)
-                    {
-                        for (int i = 0; i + len < slen; i++)
-                        { 
-                            if (lookup.ContainsKey(len))
-                            {
-                                var table = lookup[len];
-                                var test = segment.Substring(i, len);
-                                if (table.ContainsKey(test))
-                                {
-                                    string? left = i > 0 ? segment.Substring(0, i) : null;
-                                    string? right = i+len < segment.Length ? segment.Substring(i+len) : null;
+            }
+            var builder = new StringBuilder(segment.Length+3);
 
-                                    if (right != null)
-                                    {
-                                        var builder = new StringBuilder(right.Length);
-                                        if (!Generate(right, ref builder, maxLen: len))
-                                            return false;
-                                        accumulator.Append(builder.ToString());
-                                    }
-                                    if (left != null)
-                                    {
-                                        var builder = new StringBuilder(left.Length);
-                                        if (!Generate(left, ref builder, maxLen: len))
-                                            return false;
-                                        accumulator.Insert(0, builder.ToString());
-                                    }
-                                    return true;
-                                }
-                            }
+            var lookups = (len > 2) ? lexiconFirst : graphemeFirst;
+            foreach (var lookup in lookups)
+            {
+                for (byte i = 1; i < len; i ++)
+                {
+                    byte sublen = (byte)(len - i);
+
+                    if (lookup.ContainsKey(sublen))
+                    {
+                        table = lookup[sublen];
+                        var left = segment.Substring(0, sublen);
+                        var right = segment.Substring(sublen);
+
+                        if (table.ContainsKey(left))
+                        {
+                            List<NUPhoneRecord> records = table[left];
+                            var shortest = GetShortestVariant(records);
+                            return shortest + this.Generate(right);
+                        }
+                        else if (table.ContainsKey(right))
+                        {
+                            List<NUPhoneRecord> records = table[right];
+                            var shortest = GetShortestVariant(records);
+                            return this.Generate(left) + shortest;
                         }
                     }
                 }
             }
-            return false;
+            return Features.Instance.NormalizeIntoNUPhone(segment);
         }
     }
 }
