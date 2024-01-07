@@ -32,7 +32,7 @@ namespace PhonemeEmbeddings
 				{
 					using (StreamReader file = new StreamReader(path))
 					{
-						for (string line = file.ReadLine(); line != null; line = file.ReadLine())
+						for (string? line = file.ReadLine(); line != null; line = file.ReadLine())
 						{
 							if (string.IsNullOrWhiteSpace(line))
 								continue;
