@@ -57,10 +57,18 @@ namespace PhonemeEmbeddings
             }
         }
 
-        public NUPhoneGen(string word)
+        public NUPhoneGen(string word, bool raw = false)
         {
-            this.Word = word.Trim().ToLower();
-            this.Phonetic = this.Generate(word);
+            if (!raw)
+            {
+                this.Word = word.Trim().ToLower();
+                this.Phonetic = this.Generate(word);
+            }
+            else
+            {
+                this.Word = string.Empty;
+                this.Phonetic = word.Trim();
+            }
         }
         private static byte[] SubBytes(byte[] input, int startIdx, int untilIdx)
         {
