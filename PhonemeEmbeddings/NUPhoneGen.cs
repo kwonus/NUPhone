@@ -94,12 +94,13 @@ namespace PhonemeEmbeddings
             if (threshold > 100)
                 return null;
 
-            var maxLen = self.Length > other.Length ? self.Length : other.Length;
-            var minLen = self.Length < other.Length ? self.Length : other.Length;
+            int maxLen = self.Length > other.Length ? self.Length : other.Length;
+            int minLen = self.Length < other.Length ? self.Length : other.Length;
 
-            var ratio = (minLen * 100) / maxLen;
+            int diff = maxLen - minLen;
+            int percent = ((maxLen-diff) * 100) / maxLen;
 
-            return (byte)ratio >= threshold ? Compare(candidate) : (UInt16?) null;  // null represents that comparison does not meet threshold for further comparison 
+            return percent >= threshold ? Compare(candidate) : (UInt16?) null;  // null represents that comparison does not meet threshold for further comparison 
         }
         public UInt16 Compare(NUPhoneGen candidate) // returns between 0 and 10000 ... representring 0% to 100%
         {
@@ -109,8 +110,8 @@ namespace PhonemeEmbeddings
             if (self.Length == 0 || other.Length == 0)
                 return 0;
 
-            var maxLen = self.Length > other.Length ? self.Length : other.Length;
-            var minLen = self.Length < other.Length ? self.Length : other.Length;
+            int maxLen = self.Length > other.Length ? self.Length : other.Length;
+            int minLen = self.Length < other.Length ? self.Length : other.Length;
 
             if (maxLen == 1)
             {
