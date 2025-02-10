@@ -141,7 +141,7 @@ namespace PhonemeEmbeddings
             foreach (string folder in folders)
             {
                 string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string candidate = Path.Combine(appdata, "Local", "Programs", folder, collection, file);
+                string candidate = Path.Combine(appdata, "Programs", folder, collection, file);
                 if (System.IO.File.Exists(candidate))
                 {
                     return candidate;
