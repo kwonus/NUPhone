@@ -134,14 +134,25 @@ namespace PhonemeEmbeddings
                 return _enus;
             }
         }
-        private static string GetProgramDirDefault(string collection, string file)
+        // Test for folder only when file is null (otherwise, file must exist within folder)
+        private static string GetProgramDirDefault(string collection, string? file = null)
         {
             var folders = new string[] { "AV-Bible", "Digital-AV", "DigitalAV" };
 
             foreach (string folder in folders)
             {
                 string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string candidate = Path.Combine(appdata, "Programs", folder, collection, file);
+                string candidate = Path.Combine(appdata, "Programs", folder, collection);
+                if (System.IO.Directory.Exists(candidate))
+                {
+                    if (file == null)
+                        return candidate;
+                }
+                else
+                {
+                    continue;
+                }
+                candidate = Path.Combine(collection, file);
                 if (System.IO.File.Exists(candidate))
                 {
                     return candidate;
@@ -162,7 +173,17 @@ namespace PhonemeEmbeddings
             {
                 foreach (string folder in folders)
                 {
-                    string candidate = Path.Combine(root, "Program Files", folder, collection, file);
+                    string candidate = Path.Combine(root, "Programs", folder, collection);
+                    if (System.IO.Directory.Exists(candidate))
+                    {
+                        if (file == null)
+                            return candidate;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    candidate = Path.Combine(collection, file);
                     if (System.IO.File.Exists(candidate))
                     {
                         return candidate;
@@ -174,11 +195,35 @@ namespace PhonemeEmbeddings
             {
                 foreach (string folder in folders)
                 {
-                    string candidate = Path.Combine(root, "Program Files (x86)", folder, collection, file);
+                    string candidate = Path.Combine(root, "Programs", folder, collection);
+                    if (System.IO.Directory.Exists(candidate))
+                    {
+                        if (file == null)
+                            return candidate;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    candidate = Path.Combine(collection, file);
                     if (System.IO.File.Exists(candidate))
                     {
                         return candidate;
                     }
+                }
+            }
+            {
+                // Microsoft Store App location of package data
+                //
+                string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string candidate = Path.Combine(appdata, "Packages", "51374Digital-AV.org.AV-Bible", collection);
+                if (System.IO.Directory.Exists(candidate))
+                {
+                    if (file == null)
+                        return candidate;
+                    candidate = Path.Combine(collection, file);
+                    if (System.IO.File.Exists(candidate))
+                        return candidate;
                 }
             }
             return String.Empty;
