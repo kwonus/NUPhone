@@ -1,9 +1,11 @@
 namespace PhonemeEmbeddings
 {
     using System.Collections.Generic;
+    using System.IO.Compression;
+    using System.Xml.Linq;
 
-	// reading from: https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt
-	//
+    // reading from: https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt
+    //
     public class LexiconIPA
 	{
 		private static LexiconIPA? SELF = null;
@@ -134,6 +136,67 @@ namespace PhonemeEmbeddings
                 return _enus;
             }
         }
+        // this likely only gets called by AV-Bible for windows distributed on Micorosft Store
+        public static string GetMicrosoftStoreFolder(string name)
+        {
+            string appdata = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AV-Bible");
+            if (!Directory.Exists(appdata))
+                Directory.CreateDirectory(appdata);
+            string folder = Path.Combine(appdata, name);
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+            return folder;
+        }
+        public static string DownloadFiles(string name, byte timeout_seconds = 20)
+        {
+            var task = DownloadFilesAsync(name);
+
+            task.Wait(timeout_seconds * 1024);
+            if (task.IsCompleted)
+                return task.Result;
+
+            return string.Empty;
+        }
+        public static async Task<string> DownloadFilesAsync(string name)
+        {
+            string url = "https://github.com/kwonus/AV-Bible/raw/refs/heads/main/Release-9.25.2";
+            string zip = url + "/" + name + ".zip";
+
+            string path = Path.GetDirectoryName(GetMicrosoftStoreFolder(name));
+
+            using (HttpClient client = new HttpClient())
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                // Download the zip file into the memory stream
+                byte[] zipData = await client.GetByteArrayAsync(url);
+                await memoryStream.WriteAsync(zipData, 0, zipData.Length);
+                memoryStream.Position = 0; // Reset the stream position to the beginning
+
+                // Extract the contents of the zip file directly from the memory stream
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        string destinationPath = Path.Combine(path, entry.FullName);
+
+                        // Ensure the directory structure is in place
+                        if (entry.FullName.EndsWith("/"))
+                        {
+                            Directory.CreateDirectory(destinationPath);
+                            continue;
+                        }
+
+                        // Extract the file
+                        using (var entryStream = entry.Open())
+                        using (var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
+                        {
+                            await entryStream.CopyToAsync(fileStream);
+                        }
+                    }
+                }
+            }
+            return path;
+        }
         // Test for folder only when file is null (otherwise, file must exist within folder)
         private static string GetProgramDirDefault(string collection, string? file = null)
         {
@@ -212,19 +275,16 @@ namespace PhonemeEmbeddings
                     }
                 }
             }
+            string dir = GetMicrosoftStoreFolder(collection);
+            if (System.IO.Directory.Exists(dir))
             {
-                // Microsoft Store App location of package data
-                //
-                string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string candidate = Path.Combine(appdata, "Packages", "51374Digital-AV.org.AV-Bible", collection);
-                if (System.IO.Directory.Exists(candidate))
-                {
-                    if (file == null)
-                        return candidate;
-                    candidate = Path.Combine(collection, file);
-                    if (System.IO.File.Exists(candidate))
-                        return candidate;
-                }
+                if (file == null)
+                    return dir;
+                string item = Path.Combine(collection, file);
+                if (!System.IO.File.Exists(item))
+                    DownloadFiles(item);
+                if (System.IO.File.Exists(item))
+                    return item;
             }
             return String.Empty;
         }
