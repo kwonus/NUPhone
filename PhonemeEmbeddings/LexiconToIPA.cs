@@ -2,6 +2,9 @@ namespace PhonemeEmbeddings
 {
     using System.Collections.Generic;
     using System.IO.Compression;
+    using System.Reflection;
+    using System.Resources;
+    using System.Runtime.InteropServices;
     using System.Xml.Linq;
 
     // reading from: https://github.com/open-dict-data/ipa-dict/blob/master/data/en_US.txt
@@ -20,51 +23,63 @@ namespace PhonemeEmbeddings
 				return SELF;
 			}
 		}
+
         public Dictionary<string, string[]> ipa_primatives { get; private set; }
-		private LexiconIPA(string? home = null)
+        private char[] newlines = ['\n', '\r'];
+        private LexiconIPA(string? home = null)
 		{
 			LexiconIPA.SELF = this;
 
             this.ipa_primatives = new();
 
-            string path = ENUS.Replace('\\', '/');
+            int first = 0;
+            int last  = -1;
+            int len   = en_US.Contents.Length;
 
             try
             {
-				if (File.Exists(path))
-				{
-					using (StreamReader file = new StreamReader(path))
-					{
-						for (string? line = file.ReadLine(); line != null; line = file.ReadLine())
-						{
-							if (string.IsNullOrWhiteSpace(line))
-								continue;
-							var parts = line.Split('/', 2);
-							if (parts.Length < 2)
-								continue;
-							parts[0] = parts[0].Trim();
-							if (parts[0].Length < 1)
-								continue;
-							var variants = parts[1].Split(',');
-							for (int v = 0; v < variants.Length; v++)
-							{
-								var variant = variants[v].Trim();
-								if (variant.EndsWith('/') && (variant.StartsWith('/') || (v == 0)))
-								{
-									variants[v] = Features.Instance.NormalizeIntoNUPhone(variant.Replace("/", ""));
-								}
-								else
-								{
-									System.Console.WriteLine(line);
-									goto bad_record;
-								}
-							}
-							this.ipa_primatives[parts[0]] = variants;
-						bad_record:
-							;
-						}
-					}
-				}
+                do
+                {
+                    last = len > first ? en_US.Contents.IndexOfAny(newlines, first + 1) : first;
+                    if (last < 0)
+                    {
+                        break;
+                    }
+                    if (last > first)
+                    {
+                        string line = en_US.Contents.Substring(first, last - first).Trim();
+
+                        if (line.Length > 0)
+                        {
+                            var parts = line.Split('/', 2);
+                            if (parts.Length < 2)
+                                continue;
+                            parts[0] = parts[0].Trim();
+                            if (parts[0].Length < 1)
+                                continue;
+                            var variants = parts[1].Split(',');
+                            for (int v = 0; v < variants.Length; v++)
+                            {
+                                var variant = variants[v].Trim();
+                                if (variant.EndsWith('/') && (variant.StartsWith('/') || (v == 0)))
+                                {
+                                    variants[v] = Features.Instance.NormalizeIntoNUPhone(variant.Replace("/", ""));
+                                }
+                                else
+                                {
+                                    System.Console.WriteLine(line);
+                                    goto bad_record;
+                                }
+                            }
+                            this.ipa_primatives[parts[0]] = variants;
+                        bad_record:
+                            ;
+                        }              
+                    }
+                    for (first = last + 1; first < len && (en_US.Contents[first] == '\n' || en_US.Contents[first] == '\r'); first++)
+                        ;
+
+                }   while (first < len);
 			}
 			catch
 			{
@@ -72,71 +87,7 @@ namespace PhonemeEmbeddings
                 this.ipa_primatives.Clear();
             }
 		}
-        private static string _enus = null;
-        private static string ENUS
-        {
-            get
-            {
-                if (_enus != null)
-                    return _enus;
-
-                string cwd = Directory.GetCurrentDirectory();
-                for (string en = Path.Combine(cwd, "Digital-AV", "en_us.txt"); en.Length > @"X:\Digital-AV\en_us.txt".Length; en = Path.Combine(cwd, "Digital-AV", "en_us.txt"))
-                {
-                    if (System.IO.File.Exists(en))
-                    {
-                        _enus = en;
-                        return en;
-                    }
-                    var parent = Directory.GetParent(cwd);
-                    if (parent == null)
-                        break;
-                    cwd = parent.FullName;
-                }
-                cwd = Directory.GetCurrentDirectory();
-                for (string en = Path.Combine(cwd, "AV-Bible", "Digital-AV", "en_us.txt"); en.Length > @"X:\Digital-AV\en_us.txt".Length; en = Path.Combine(cwd, "AV-Bible", "Digital-AV", "en_us.txt"))
-                {
-                    if (System.IO.File.Exists(en))
-                    {
-                        _enus = en;
-                        return en;
-                    }
-                    var parent = Directory.GetParent(cwd);
-                    if (parent == null)
-                        break;
-                    cwd = parent.FullName;
-                }
-                cwd = Directory.GetCurrentDirectory();
-                for (string en = Path.Combine(cwd, "AVBible", "Digital-AV", "en_us.txt"); en.Length > @"X:\Digital-AV\en_us.txt".Length; en = Path.Combine(cwd, "AVBible", "Digital-AV", "en_us.txt"))
-                {
-                    if (System.IO.File.Exists(en))
-                    {
-                        _enus = en;
-                        return en;
-                    }
-                    var parent = Directory.GetParent(cwd);
-                    if (parent == null)
-                        break;
-                    cwd = parent.FullName;
-                }
-                cwd = Directory.GetCurrentDirectory();
-                for (string en = Path.Combine(cwd, "en_us.txt"); en.Length > @"X:\en_us.txt".Length; en = Path.Combine(cwd, "en_us.txt"))
-                {
-                    if (System.IO.File.Exists(en))
-                    {
-                        _enus = en;
-                        return en;
-                    }
-                    var parent = Directory.GetParent(cwd);
-                    if (parent == null)
-                        break;
-                    cwd = parent.FullName;
-                }
-                _enus = GetProgramDirDefault("Digital-AV", "en_us.txt");
-                return _enus;
-            }
-        }
-        // this likely only gets called by AV-Bible for windows distributed on Micorosft Store
+        // obsolete method is likely just cruft
         public static string GetMicrosoftStoreFolder(string name)
         {
             string appdata = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AV-Bible");
@@ -147,9 +98,9 @@ namespace PhonemeEmbeddings
                 Directory.CreateDirectory(folder);
             return folder;
         }
-        public static string DownloadFiles(string name, byte timeout_seconds = 20)
+        private static string OBSOLETE_DownloadFiles(string name, byte timeout_seconds = 20)
         {
-            var task = DownloadFilesAsync(name);
+            var task = OBSOLETE_DownloadFilesAsync(name);
 
             task.Wait(timeout_seconds * 1024);
             if (task.IsCompleted)
@@ -157,7 +108,7 @@ namespace PhonemeEmbeddings
 
             return string.Empty;
         }
-        public static async Task<string> DownloadFilesAsync(string name)
+        private static async Task<string> OBSOLETE_DownloadFilesAsync(string name)
         {
             string url = "https://github.com/kwonus/AV-Bible/raw/refs/heads/main/Release-9.25.2";
             string zip = url + "/" + name + ".zip";
@@ -198,83 +149,8 @@ namespace PhonemeEmbeddings
             return path;
         }
         // Test for folder only when file is null (otherwise, file must exist within folder)
-        private static string GetProgramDirDefault(string collection, string? file = null)
+        private static string OBSOLETE_GetProgramDirDefault(string collection, string? file = null)
         {
-            var folders = new string[] { "AV-Bible", "Digital-AV", "DigitalAV" };
-
-            foreach (string folder in folders)
-            {
-                string appdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string candidate = Path.Combine(appdata, "Programs", folder, collection);
-                if (System.IO.Directory.Exists(candidate))
-                {
-                    if (file == null)
-                        return candidate;
-                }
-                else
-                {
-                    continue;
-                }
-                candidate = Path.Combine(collection, file);
-                if (System.IO.File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            var roots = new string[0];
-            try
-            {
-                roots = new string[] { Directory.GetDirectoryRoot(Directory.GetCurrentDirectory()), @"C:\", @"D:\", @"E:\", @"F:\" };
-            }
-            catch
-            {
-                roots = new string[] { @"C:\", @"D:\", @"E:\", @"F:\" };
-            }
-
-            foreach (string root in roots)
-            {
-                foreach (string folder in folders)
-                {
-                    string candidate = Path.Combine(root, "Programs", folder, collection);
-                    if (System.IO.Directory.Exists(candidate))
-                    {
-                        if (file == null)
-                            return candidate;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    candidate = Path.Combine(collection, file);
-                    if (System.IO.File.Exists(candidate))
-                    {
-                        return candidate;
-                    }
-                }
-            }
-
-            foreach (string root in roots)
-            {
-                foreach (string folder in folders)
-                {
-                    string candidate = Path.Combine(root, "Programs", folder, collection);
-                    if (System.IO.Directory.Exists(candidate))
-                    {
-                        if (file == null)
-                            return candidate;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    candidate = Path.Combine(collection, file);
-                    if (System.IO.File.Exists(candidate))
-                    {
-                        return candidate;
-                    }
-                }
-            }
             string dir = GetMicrosoftStoreFolder(collection);
             if (System.IO.Directory.Exists(dir))
             {
@@ -282,7 +158,7 @@ namespace PhonemeEmbeddings
                     return dir;
                 string item = Path.Combine(collection, file);
                 if (!System.IO.File.Exists(item))
-                    DownloadFiles(item);
+                    OBSOLETE_DownloadFiles(item);
                 if (System.IO.File.Exists(item))
                     return item;
             }
